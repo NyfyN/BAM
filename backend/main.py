@@ -5,6 +5,7 @@ import sqlite3
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # Zmień na własny klucz
+app.config['JWT_VERIFY_SUB'] = False
 jwt = JWTManager(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -14,12 +15,12 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 def init_db():
     con = sqlite3.connect('test.db')
     cur = con.cursor()
-    cur.execute('DROP TABLE IF EXISTS users')
-    cur.execute('DROP TABLE IF EXISTS tasks')
+    # cur.execute('DROP TABLE IF EXISTS users')
+    # cur.execute('DROP TABLE IF EXISTS tasks')
     cur.execute(
         'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)')
     cur.execute(
-        "INSERT OR IGNORE INTO users (id, username, password) VALUES (1, 'A', 'A')")
+        "INSERT OR IGNORE INTO users (username, password) VALUES ('A', 'A'), ('admin', 'admin')")
     cur.execute('CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT NOT NULL, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))')
     con.commit()
     con.close()
@@ -72,7 +73,9 @@ def login():
 @app.route('/tasks', methods=['GET'])
 @jwt_required()
 def get_tasks():
+    # app.logger.info(request.headers)
     user_id = get_jwt_identity()
+    app.logger.info(user_id)
     con = sqlite3.connect('test.db')
     cur = con.cursor()
     cur.execute('SELECT id, task FROM tasks WHERE user_id = ?', (user_id,))
@@ -86,20 +89,31 @@ def get_tasks():
 @app.route('/tasks', methods=['POST'])
 @jwt_required()
 def add_task():
-    print("here")
-    # user_id = get_jwt_identity()
-    # task_content = request.json.get('task')
+    # print("here")
+    user_id = get_jwt_identity()
+    task_content = request.json.get('task')
     # print(task_content)
-    # if not task_content:
-    #     return jsonify({"msg": "Treść zadania jest wymagana"}), 400
-    # con = sqlite3.connect('test.db')
-    # cur = con.cursor()
-    # cur.execute('INSERT INTO tasks (task, user_id) VALUES (?, ?)',
-    #             (task_content, user_id))
-    # con.commit()
-    # new_task_id = cur.lastrowid
-    # con.close()
-    # return jsonify({"id": new_task_id, "task": task_content}), 201
+    if not task_content:
+        return jsonify({"msg": "Treść zadania jest wymagana"}), 400
+    con = sqlite3.connect('test.db')
+    cur = con.cursor()
+    cur.execute('INSERT INTO tasks (task, user_id) VALUES (?, ?)',
+                (task_content, user_id))
+    con.commit()
+    new_task_id = cur.lastrowid
+    con.close()
+    return jsonify({"id": new_task_id, "task": task_content}), 201
+
+@app.route('/deletetasks', methods=['DELETE'])
+@jwt_required()
+def delete_tasks():
+    user_id = get_jwt_identity()
+    con = sqlite3.connect('test.db')
+    cur = con.cursor()
+    cur.execute('DELETE FROM tasks WHERE user_id = ?', (user_id,))
+    con.commit()
+    con.close()
+    return jsonify({"msg": "deleted"}), 200
 
 
 if __name__ == '__main__':

@@ -1,15 +1,20 @@
 import axios from 'axios';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { Alert, View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = 'http://192.168.0.196:5000';
+const API_URL = 'http://192.168.0.119:5000';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    if(token) fetchTasks();
+  });
 
   // Pobierz zadania z backendu
   const fetchTasks = async () => {
@@ -19,7 +24,7 @@ export default function App() {
       });
       setTasks(response.data.tasks);
     } catch (error) {
-      console.error('Fetch tasks error:', error);
+      console.error('Fetch tasks error:', error.response.data);
       Alert.alert('Błąd', 'Nie udało się pobrać zadań.');
     }
   };
@@ -34,7 +39,7 @@ export default function App() {
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       setNewTask('');
-      fetchTasks();
+      await fetchTasks();
     } catch (error) {
       console.error('Add task error:', error);
       Alert.alert('Błąd', 'Nie udało się dodać zadania.');
@@ -47,13 +52,35 @@ export default function App() {
       const response = await axios.post(`${API_URL}/login`, { username, password }, {
         headers: { 'Content-Type': 'application/json' },
       });
-      setToken(response.data.access_token);
-      fetchTasks();
+      const new_token = response.data.access_token;
+      await AsyncStorage.setItem('token', new_token);
+      setToken(new_token);
     } catch (error) {
       console.error('Login error:', error);
       Alert.alert('Błąd', 'Nie udało się zalogować.');
     }
   };
+
+  const logout = async() => {
+    try {
+      await AsyncStorage.removeItem('token');
+      setToken('');
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Błąd', 'Nie udało się wylogować');
+    }
+  }
+
+  const deleteTasks = async() => {
+    try {
+      await axios.delete(`${API_URL}/deletetasks`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error('Delete tasks error: ', error);
+      Alert.alert('Błąd', 'Nie udało się usunąć wszystkich zadań');
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -85,6 +112,8 @@ export default function App() {
             onChangeText={setNewTask}
           />
           <Button title="Dodaj zadanie" onPress={addTask} />
+          <Button title="Wyloguj się" onPress={logout} />
+          <Button title="Usuń wszystkie zadania" onPress={deleteTasks} />
           {tasks.map((task) => (
             <Text key={task.id}>{task.task}</Text>
           ))}
@@ -99,6 +128,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 16,
+    backgroundColor: 'white',
   },
   header: {
     fontSize: 24,
