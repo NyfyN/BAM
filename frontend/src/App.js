@@ -1,9 +1,12 @@
 import axios from 'axios';
 import {useEffect, useState} from 'react';
-import { Alert, View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { Alert, View } from 'react-native';
+import LoginScreen from './components/LoginScreen';
+import TaskScreen from './components/TaskScreen';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import screenStyles from "./components/screenStyles";
 
-const API_URL = 'http://192.168.0.119:5000';
+const API_URL = 'http://192.168.0.128:5000';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
@@ -11,13 +14,23 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
+  const [taskUpdated, setTaskUpdated] = useState(false);
 
   useEffect(() => {
     if(token) fetchTasks();
-  });
+  }, [token]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [taskUpdated]);
+
+  const refreshTasks = () => {
+    setTaskUpdated((prev) => !prev);
+  }
 
   // Pobierz zadania z backendu
   const fetchTasks = async () => {
+    if (!token) return;
     try {
       const response = await axios.get(`${API_URL}/tasks`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -39,7 +52,7 @@ export default function App() {
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       setNewTask('');
-      await fetchTasks();
+      refreshTasks();
     } catch (error) {
       console.error('Add task error:', error);
       Alert.alert('Błąd', 'Nie udało się dodać zadania.');
@@ -76,6 +89,7 @@ export default function App() {
       await axios.delete(`${API_URL}/deletetasks`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      refreshTasks();
     } catch (error) {
       console.error('Delete tasks error: ', error);
       Alert.alert('Błąd', 'Nie udało się usunąć wszystkich zadań');
@@ -83,62 +97,45 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={screenStyles.container}>
       {!token ? (
-        <>
-          <Text style={styles.header}>Logowanie</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
+          <LoginScreen
+            username={username}
+            password={password}
+            setUsername={setUsername}
+            setPassword={setPassword}
+            onLogin={login}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <Button title="Login" onPress={login} />
-        </>
       ) : (
-        <>
-          <Text style={styles.header}>Lista zadań</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nowe zadanie"
-            value={newTask}
-            onChangeText={setNewTask}
+          <TaskScreen
+            tasks={tasks}
+            newTask={newTask}
+            setNewTask={setNewTask}
+            onAddTask={addTask}
+            onLogout={logout}
+            onDeleteAll={deleteTasks}
           />
-          <Button title="Dodaj zadanie" onPress={addTask} />
-          <Button title="Wyloguj się" onPress={logout} />
-          <Button title="Usuń wszystkie zadania" onPress={deleteTasks} />
-          {tasks.map((task) => (
-            <Text key={task.id}>{task.task}</Text>
-          ))}
-        </>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: 'white',
-  },
-  header: {
-    fontSize: 24,
-    marginBottom: 16,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     padding: 16,
+//     backgroundColor: 'white',
+//   },
+//   header: {
+//     fontSize: 24,
+//     marginBottom: 16,
+//   },
+//   input: {
+//     height: 40,
+//     borderColor: 'gray',
+//     borderWidth: 1,
+//     marginBottom: 12,
+//     paddingHorizontal: 8,
+//   },
+// });
