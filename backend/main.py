@@ -15,8 +15,8 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 def init_db():
     con = sqlite3.connect('test.db')
     cur = con.cursor()
-    # cur.execute('DROP TABLE IF EXISTS users')
-    # cur.execute('DROP TABLE IF EXISTS tasks')
+    cur.execute('DROP TABLE IF EXISTS users')
+    cur.execute('DROP TABLE IF EXISTS tasks')
     cur.execute(
         'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)')
     cur.execute(

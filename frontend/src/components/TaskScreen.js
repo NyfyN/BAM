@@ -1,4 +1,4 @@
-import { Text, TextInput, Button } from 'react-native';
+import {Text, TextInput, Button, FlatList, View} from 'react-native';
 import screenStyles from "./screenStyles";
 
 const TaskScreen = ({ tasks, newTask, setNewTask, onAddTask, onLogout, onDeleteAll }) => (
@@ -14,9 +14,15 @@ const TaskScreen = ({ tasks, newTask, setNewTask, onAddTask, onLogout, onDeleteA
     <Button title="Wyloguj się" onPress={onLogout} />
     <Button title="Usuń wszystkie zadania" onPress={onDeleteAll} />
     {tasks.length === 0 ? (
-      <Text>Brak zadań do wyświetlenia.</Text>
+        <Text>Brak zadań do wyświetlenia.</Text>
     ) : (
-      tasks.map((task) => <Text key={task.id}>{task.task}</Text>)
+        <View style={screenStyles.list}>
+            <Text>Lista zadań:</Text>
+            <FlatList
+                data = {tasks}
+                renderItem={({item}) => <Text key={item.id}>&middot; {item.task}</Text>}
+            />
+        </View>
     )}
   </>
 );

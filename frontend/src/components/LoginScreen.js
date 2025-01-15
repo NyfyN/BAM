@@ -1,7 +1,7 @@
 import { Text, TextInput, Button } from 'react-native';
 import screenStyles from "./screenStyles";
 
-const LoginScreen = ({ username, password, setUsername, setPassword, onLogin }) => (
+const LoginScreen = ({ username, password, setUsername, setPassword, onLogin, onRegister }) => (
   <>
     <Text style={screenStyles.header}>Logowanie</Text>
     <TextInput
@@ -18,6 +18,7 @@ const LoginScreen = ({ username, password, setUsername, setPassword, onLogin }) 
       secureTextEntry
     />
     <Button title="Login" onPress={onLogin} />
+    <Button title="Register" onPress={onRegister} />
   </>
 );
 

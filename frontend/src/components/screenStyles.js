@@ -18,6 +18,9 @@ const screenStyles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 8,
   },
+  list: {
+    marginBottom: 20,
+  }
 });
 
 export default screenStyles;
