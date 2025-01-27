@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as LocalAuthentication from 'expo-local-authentication';
 import screenStyles from "./components/screenStyles";
 
-const API_URL = 'http://SET_BACKEND_ADDRESS_HERE:5000';
+const API_URL = 'http://192.168.0.196:5000';
 
 export default function App() {
   const [screen, setScreen] = useState('login');
@@ -168,6 +168,7 @@ export default function App() {
     }
     refreshTasks();
   }
+
   const synchronizeTasks = async () => {
     try {
       const queuedTasksString = await SecureStore.getItemAsync('queuedTasks');
@@ -243,6 +244,7 @@ export default function App() {
           onDeleteAll={deleteTasks}
           synchronizeAllTasks={synchronizeTasks}
           checkTasks={checkTasks}
+          offline={offline}
         />
       )}
     </View>
