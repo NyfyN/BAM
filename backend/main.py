@@ -115,6 +115,11 @@ def delete_tasks():
     con.close()
     return jsonify({"msg": "deleted"}), 200
 
+@app.after_request
+def add_csp(resp):
+    resp.headers['Content-Security-Policy'] = "frame ancestors 'none';"
+    return resp
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

@@ -20,7 +20,20 @@ const screenStyles = StyleSheet.create({
   },
   list: {
     marginBottom: 20,
-  }
+  },
+  offline: {
+    textAlign: "center",
+    justifyContent: "center",
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  label: {
+    marginRight: 10,
+    fontSize: 16,
+  },
 });
 
 export default screenStyles;
